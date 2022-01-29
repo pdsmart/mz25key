@@ -1,0 +1,308 @@
+menu "MZ25Key Configuration"
+
+    menu "PS2 Keyboard"
+
+        config PS2_HW_DATAPIN
+            int "GPIO pin number used for the PS/2 DATA line"
+            range 0 46
+            default 14 
+            help
+                GPIO number (IOxx) used to connect with the PS/2 Keyboard DATA line.
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to I2C.
+                GPIOs 35-39 are input-only so cannot be used as outputs.
+    
+        config PS2_HW_CLKPIN
+            int "GPIO pin number used for the PS/2 CLK line"
+            range 0 46
+            default 13 
+            help
+                GPIO number (IOxx) used to connect with the PS/2 Keyboard CLK line.
+                This pin must be interrupt capable.
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to I2C.
+                GPIOs 35-39 are input-only so cannot be used as outputs.
+
+        choice KEYBOARD
+            prompt "Keyboard mapping"
+            default KEYMAP_WYSE_KB3926
+            help
+                Choose the PS/2 Keyboard being used with the interface. This option selects the map defined in
+                PS2KeyTable.h which maps the PS/2 Keyboard scan codes to the standard PS2_KEY_* definitions used
+                in the map to MZ-2500/2800 keys.
+
+            config KEYMAP_WYSE_KB3926
+                bool "Wyse KB-3926"
+                help
+                    The Wyse KB3296 PS/2 keyboard mapping.
+
+            config KEYMAP_STANDARD
+                bool "Standard Definition"
+                help
+                    A generic PS/2 keyboard mapping.
+
+        endchoice
+
+    endmenu
+
+    menu "MZ-2500/2800 Interface"
+        menu "4Bit Strobe Input"
+
+            config MZ_KDB0
+                int "KDB0 GPIO pin number"
+                range 0 46
+                default 23 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 4bit bidirectional data bus Bit 0 with the ESP32. See schematic for actual used value. May change with revisions.
+
+            config MZ_KDB1
+                int "KDB1 GPIO pin number"
+                range 0 46
+                default 25 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 4bit bidirectional data bus Bit 1 with the ESP32. See schematic for actual used value. May change with revisions.
+
+            config MZ_KDB2
+                int "KDB2 GPIO pin number"
+                range 0 46
+                default 26 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 4bit bidirectional data bus Bit 2 with the ESP32. See schematic for actual used value. May change with revisions.
+
+            config MZ_KDB3
+                int "KDB1 GPIO pin number"
+                range 0 46
+                default 27 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 4bit bidirectional data bus Bit 3 with the ESP32. See schematic for actual used value. May change with revisions.
+        endmenu
+
+        menu "8Bit Scan Data Output"
+            config MZ_KDO0
+                int "KDO0 GPIO pin number"
+                range 0 46
+                default 14 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 8bit scan data output Bit 0 to the 74HCT257 IC. See schematic for actual used value. May change with revisions.
+
+            config MZ_KDO1
+                int "KDO1 GPIO pin number"
+                range 0 46
+                default 15 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 8bit scan data output Bit 1 to the 74HCT257 IC. See schematic for actual used value. May change with revisions.
+
+            config MZ_KDO2
+                int "KDO2 GPIO pin number"
+                range 0 46
+                default 16 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 8bit scan data output Bit 2 to the 74HCT257 IC. See schematic for actual used value. May change with revisions.
+
+            config MZ_KDO3
+                int "KDO3 GPIO pin number"
+                range 0 46
+                default 17 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 8bit scan data output Bit 3 to the 74HCT257 IC. See schematic for actual used value. May change with revisions.
+
+            config MZ_KDO4
+                int "KDO4 GPIO pin number"
+                range 0 46
+                default 18 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 8bit scan data output Bit 4 to the 74HCT257 IC. See schematic for actual used value. May change with revisions.
+
+            config MZ_KDO5
+                int "KDO5 GPIO pin number"
+                range 0 46
+                default 19 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 8bit scan data output Bit 5 to the 74HCT257 IC. See schematic for actual used value. May change with revisions.
+
+            config MZ_KDO6
+                int "KDO6 GPIO pin number"
+                range 0 46
+                default 21 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 8bit scan data output Bit 6 to the 74HCT257 IC. See schematic for actual used value. May change with revisions.
+
+            config MZ_KDO7
+                int "KDO7 GPIO pin number"
+                range 0 46
+                default 21 
+                help
+                    GPIO number (IOxx) used to connect the MZ-2500/2800 8bit scan data output Bit 7 to the 74HCT257 IC. See schematic for actual used value. May change with revisions.
+        endmenu
+
+        config MZ_RTSNI
+            int "RTSNi GPIO pin number"
+            range 0 46
+            default 35 
+            help
+                GPIO number (IOxx) used to connect the MZ-2500/2800 RTSN line with the ESP32. See schematic for actual used value. May change with revisions.
+
+        config MZ_KDI4
+            int "KDI4 GPIO pin number"
+            range 0 46
+            default 13 
+            help
+                GPIO number (IOxx) used to connect the MZ-2500/2800 KDI4 line with the ESP32. See schematic for actual used value. May change with revisions.
+
+    endmenu
+
+    menu "Debug Options"
+
+        menu "OLED"
+
+            choice INTERFACE
+                prompt "OLED Interface Type"
+                default OLED_DISABLED
+                help
+                    Select Interface.
+                config OLED_DISABLED
+                    bool "Interface disabled"
+                    help
+                        No OLED present or to be disabled.
+                config I2C_INTERFACE
+                    bool "I2C Interface"
+                    help
+                        I2C Interface.
+                config SPI_INTERFACE
+                    bool "SPI Interface"
+                    help
+                        SPI Interface.
+            endchoice
+
+            choice PANEL
+                prompt "OLED Panel Type"
+                depends on I2C_INTERFACE || SPI_INTERFACE
+                default SSD1306_128x64
+                help
+                    Select Panel Type.
+                config SSD1306_128x32
+                    bool "128x32 Panel"
+                    help
+                        Panel is 128x32.
+                config SSD1306_128x64
+                    bool "128x64 Panel"
+                    help
+                        Panel is 128x64.
+            endchoice
+
+            config OFFSETX
+                int "GRAM X OFFSET"
+                range 0 99
+                default 0
+                help
+                    When your TFT have offset(X), set it.
+        
+            config FLIP
+                bool "Flip upside down"
+                default false
+                help
+                    Flip upside down.
+        
+            config SCL_GPIO
+                depends on I2C_INTERFACE
+                int "SCL GPIO number"
+                range 0 46
+                default 22 if IDF_TARGET_ESP32
+                default 12 if IDF_TARGET_ESP32S2
+                default 9  if IDF_TARGET_ESP32C3
+                default 15 if IDF_TARGET_HELTEC32
+                help
+                    GPIO number (IOxx) to I2C SCL.
+                    Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to I2C.
+                    GPIOs 35-39 are input-only so cannot be used as outputs.
+        
+            config SDA_GPIO
+                depends on I2C_INTERFACE
+                int "SDA GPIO number"
+                range 0 46
+                default 21 if IDF_TARGET_ESP32
+                default 11 if IDF_TARGET_ESP32S2
+                default 10 if IDF_TARGET_ESP32C3
+                default 4 if IDF_TARGET_HELTEC32
+                help
+                    GPIO number (IOxx) to I2C SDA.
+                    Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to I2C.
+                    GPIOs 35-39 are input-only so cannot be used as outputs.
+        
+            config RESET_GPIO
+                int "RESET GPIO number"
+                range -1 46
+                default -1 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32C3
+                default 16 if IDF_TARGET_HELTEC32
+                help
+                    GPIO number (IOxx) to RESET.
+                    When it is -1, RESET isn't performed.
+                    Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to Reset.
+                    GPIOs 35-39 are input-only so cannot be used as outputs.
+        
+            config MOSI_GPIO
+                depends on SPI_INTERFACE
+                int "MOSI GPIO number"
+                range 0 46
+                default 23 if IDF_TARGET_ESP32
+                default 35 if IDF_TARGET_ESP32S2
+                default 0  if IDF_TARGET_ESP32C3
+                help
+                    GPIO number (IOxx) to SPI MOSI.
+                    Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to DC.
+                    On the ESP32, GPIOs 35-39 are input-only so cannot be used as outputs.
+                    On the ESP32-S2, GPIO 46 is input-only so cannot be used as outputs.
+        
+            config SCLK_GPIO
+                depends on SPI_INTERFACE
+                int "SCLK GPIO number"
+                range 0 46
+                default 18 if IDF_TARGET_ESP32
+                default 36 if IDF_TARGET_ESP32S2
+                default 1  if IDF_TARGET_ESP32C3
+                help
+                    GPIO number (IOxx) to SPI SCLK.
+                    Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to DC.
+                    On the ESP32, GPIOs 35-39 are input-only so cannot be used as outputs.
+                    On the ESP32-S2, GPIO 46 is input-only so cannot be used as outputs.
+        
+            config CS_GPIO
+                depends on SPI_INTERFACE
+                int "CS GPIO number"
+                range 0 34
+                default 5 if IDF_TARGET_ESP32
+                default 34 if IDF_TARGET_ESP32S2
+                default 10 if IDF_TARGET_ESP32C3
+                help
+                    GPIO number (IOxx) to SPI CS.
+                    Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to CS.
+                    GPIOs 35-39 are input-only so cannot be used as outputs.
+        
+            config DC_GPIO
+                depends on SPI_INTERFACE
+                int "DC GPIO number"
+                range 0 34
+                default 2
+                help
+                    GPIO number (IOxx) to SPI DC.
+                    Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to DC.
+                    GPIOs 35-39 are input-only so cannot be used as outputs.
+
+        endmenu
+
+        config DEBUG_SERIAL
+            bool "Serial debug output"
+            default false
+            help
+                Enable debug output (non ESP logging) on the serial port.
+    endmenu
+
+    config PWRLED
+        int "GPIO pin number used for Power On and Status LED"
+        range 0 46
+        default 25 
+        help
+            GPIO number (IOxx) used to control the Power On/Status LED.
+            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to I2C.
+            GPIOs 35-39 are input-only so cannot be used as outputs.
+
+endmenu
+
