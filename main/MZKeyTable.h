@@ -1,12 +1,12 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Name:            keytable.h
+// Name:            MZKeyTable.h
 // Created:         Jan 2022
 // Version:         v1.0
 // Author(s):       Philip Smart
 // Description:     The PS/2 Scan Code to MZ-2500/2800 Key Matrix mapping logic.
 //                  This source file contains the definitions and tables to convert a PS/2 scan code
-//                  into an MZ 13x8 matrix equivalent for the received key. The matrix is then read
+//                  into an MZ 14x8 matrix equivalent for the received key. The matrix is then read
 //                  out to the MZ-2500/2800 as though it was a real keyboard.
 // Credits:         
 // Copyright:       (c) 2019-2022 Philip Smart <philip.smart@net2net.org>
@@ -52,13 +52,24 @@
 //  4       G         F         E         D         C         B         A         ?
 //  5       O         N         M         L         K         J         I         H
 //  6       W         V         U         T         S         R         Q         P
-//  7      <¿        .>¿     ¿¿      ¿         | '¿      Z ¿      Y         X ¿ 
+//  7      <¿        .>¿        ¿¿        ¿         | '¿      Z ¿       Y         X ¿ 
 //  8       7'        6&        5%        4$        3#        2"        1!        0
 //  9                 [(        @         -=        ;+        :*        9)        8(
 // 10       /         *         ESC       BACKSPACE INST/DEL  CLR/HOME  COPY      ]}
-// 11                                     CTRL      ¿¿      SHIFT     LOCK      GRAPH
-// 12                                                                   ¿¿      ¿¿¿
+// 11                                     CTRL      ¿¿        SHIFT     LOCK      GRAPH
+// 12                                                                   ¿¿        ¿¿¿
 // 13                                                                   HELP      ARGO 
+//
+// Col      0        1         2         3         4         5         6         7        8        9        10       11       12      13
+// --------------------------------------------------------------------------------------------------------------------------------------
+// D0       F1       F9        0         TAB       ?         H         P                  0        8(       ]}       GRAPH    ¿¿¿     ARGO
+// D1       F2       F10       1         SPACE     A         I         Q         T        1!       9)       COPY     LOCK     ¿¿      HELP
+// D2       F3       8         2         RETURN    B         J         R         Z ¿      2"       :*       CLR/HOME SHIFT
+// D3       F4       9         3         UP        C         K         S         | '¿     3#       ;+       INST/DEL ¿¿
+// D4       F5       ,         4         DOWN      D         L         T         ¿        4$       -=       BACKSPACE CTRL
+// D5       F6       .         5         LEFT      E         M         U         ¿¿       5%       @        ESC
+// D6       F7       +         6         RIGHT     F         N         V         .>¿      6&       [(       *
+// D7       F8       -         7         BREAK     G         O         W         <¿       7'                /
 
 #define PSMZTBL_KEYPOS     0
 #define PSMZTBL_SHIFTPOS   1
@@ -182,8 +193,5 @@ const unsigned char PS2toMZ[][PSMZTBL_MAXROWS] =
     PS2_KEY_NUM,       0,        0,         0,        0,        0,           0xFF,    0xFF,    0xFF,    0xFF,    0xFF,    0xFF,
 	0,                 0,        0,         0,        0,        0,           0xFF,    0xFF,    0xFF,    0xFF,    0xFF,    0xFF, 
 };
-
-// PS/2 BREAK key code string
-const unsigned char BREAK_CODE[8]={0xE1,0x14,0x77,0xE1,0xF0,0x14,0xF0,0x77};
 
 #endif // KEYTABLE_H

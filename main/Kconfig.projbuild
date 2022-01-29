@@ -288,11 +288,35 @@ menu "MZ25Key Configuration"
 
         endmenu
 
-        config DEBUG_SERIAL
+        config MZ_DEBUG_SERIAL
             bool "Serial debug output"
             default false
             help
                 Enable debug output (non ESP logging) on the serial port.
+
+        config MZ_DISABLE_KDB
+            bool "Disable input mode actuation of the KDB data bus"
+            default false
+            help
+                Disable the MZ Interface KDB input configuration step, useful feature for debugging.
+
+        config MZ_DISABLE_KDO
+            bool "Disable output mode actuation of the KDO strobe row"
+            default false
+            help
+                Disable the MZ Interface KDO output configuration step, useful feature for debugging.
+
+        config MZ_DISABLE_RTSNI
+            bool "Disable input mode actuation of the RTSNi signal"
+            default false
+            help
+                Disable the MZ Interface RTSNi input configuration step, useful feature for debugging.
+
+        config MZ_DISABLE_KDI
+            bool "Disable input mode actuation of the KDI4 signal"
+            default false
+            help
+                Disable the MZ Interface KDI input configuration step, useful feature for debugging.
     endmenu
 
     config PWRLED
