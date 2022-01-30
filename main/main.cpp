@@ -20,10 +20,10 @@
 //                  use esp-idf library calls rather than Arduino.
 //
 //                  The Espressif environment is necessary in order to have more control over the build.
-//                  It is important, for timing, that the Core 1 is dedicated to MZ Interface 
+//                  It is important, for timing, that Core 1 is dedicated to MZ Interface 
 //                  logic and Core 0 is used for all RTOS/Interrupts tasks. 
 //
-//                  The application is configured via the Kconfig system. Use idf.py menuconfig to 
+//                  The application is configured via the Kconfig system. Use 'idf.py menuconfig' to 
 //                  configure.
 // Credits:         
 // Copyright:       (c) 2022 Philip Smart <philip.smart@net2net.org>
@@ -271,7 +271,7 @@ IRAM_ATTR unsigned char updateMatrix(uint16_t data)
                 ((data & PS2_FUNCTION) && PS2toMZ[idx][PSMZTBL_FUNCPOS]  == 1) )
             {
                 
-                // Exact entry match, data + control key? On an exact match we only process the first key. On a data only match we fall through to include the data and control key matches to allow for un-coded keys, ie. Japanese characters.
+                // Exact entry match, data + control key? On an exact match we only process the first key. On a data only match we fall through to include additional data and control key matches to allow for un-mapped key combinations, ie. Japanese characters.
                 matchExact = ((data & PS2_SHIFT)    && PS2toMZ[idx][PSMZTBL_SHIFTPOS] == 1) || 
                              ((data & PS2_CTRL)     && PS2toMZ[idx][PSMZTBL_CTRLPOS]  == 1) ||
                              ((data & PS2_ALT_GR)   && PS2toMZ[idx][PSMZTBL_ALTGRPOS] == 1) ||
@@ -319,7 +319,7 @@ IRAM_ATTR unsigned char updateMatrix(uint16_t data)
                 }
             }
            
-            // Only spend timw updating signals if an actual change occurred. Some keys arent valid so no change will be effected.
+            // Only spend time updating signals if an actual change occurred. Some keys arent valid so no change will be effected.
             if(changed)
             {
                 // To save time in the MZ Interface, a mirror keyMatrix is built up, 32bit (GPIO Bank 0) wide, with the keyMatrix 8 bit data
@@ -357,7 +357,7 @@ IRAM_ATTR unsigned char updateMatrix(uint16_t data)
             }
         }
     }
-    return changed;
+    return(changed);
 }
 
 // Primary PS/2 thread, running on Core 1.
@@ -387,25 +387,7 @@ IRAM_ATTR void ps2Interface( void * pvParameters )
             #endif
 
             // Update the virtual matrix with the new key value.
-            dataChange = updateMatrix(scanCode);
-
-            if(dataChange)
-            {
-                // To save time in the MZ Interface, a mirror keyMatrix is built up, 32bit (GPIO Bank 0) wide, with the keyMatrix 8 bit data
-                // mapped onto the configured pins in the 32bit register. This saves previous time in order to meet the tight 1.2uS cycle.
-                //
-                for(int idx=0; idx < 15; idx++)
-                {
-                    mzControl.keyMatrixAsGPIO[idx] =  (((mzControl.keyMatrix[idx] >> 7) & 0x01) ^ 0x01) << CONFIG_MZ_KDO7 |
-                                                      (((mzControl.keyMatrix[idx] >> 6) & 0x01) ^ 0x01) << CONFIG_MZ_KDO6 |
-                                                      (((mzControl.keyMatrix[idx] >> 5) & 0x01) ^ 0x01) << CONFIG_MZ_KDO5 |
-                                                      (((mzControl.keyMatrix[idx] >> 4) & 0x01) ^ 0x01) << CONFIG_MZ_KDO4 |
-                                                      (((mzControl.keyMatrix[idx] >> 3) & 0x01) ^ 0x01) << CONFIG_MZ_KDO3 |
-                                                      (((mzControl.keyMatrix[idx] >> 2) & 0x01) ^ 0x01) << CONFIG_MZ_KDO2 |
-                                                      (((mzControl.keyMatrix[idx] >> 1) & 0x01) ^ 0x01) << CONFIG_MZ_KDO1 |
-                                                      (((mzControl.keyMatrix[idx]     ) & 0x01) ^ 0x01) << CONFIG_MZ_KDO0 ;
-                }
-            }
+            dataChange |= updateMatrix(scanCode);
         }
 
         #if defined(CONFIG_DEBUG_OLED) || !defined(CONFIG_OLED_DISABLED)
