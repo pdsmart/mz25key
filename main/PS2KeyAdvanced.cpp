@@ -5,7 +5,7 @@
   Created September 2014
   Updated January 2016 - Paul Carpenter - add tested on Due and tidy ups for V1.5 Library Management
     January 2020   Fix typos, correct keyboard reset status improve library.properties 
-		   and additional platform handling and some documentation
+           and additional platform handling and some documentation
     March 2020  Add SAMD1 as recognised support as has been tested by user
                 Improve different architecture handling
     November 2020 Add support for STM32 from user Hiabuto-de
@@ -303,7 +303,7 @@ else
                   send_next( );              // Check for more to send
                   }
               }
-            _bitcount = 0;	            // end of byte
+            _bitcount = 0;                // end of byte
             break;
     default: // in case of weird error and end of byte reception re-sync
             _bitcount = 0;
@@ -455,7 +455,7 @@ switch( _bitcount )
             _tx_ready &= ~_COMMAND;
           if( !( _ps2mode & _WAIT_RESPONSE ) )   //  if not wait response
             send_next( );                    // check anything else to queue up
-          _bitcount = 0;	            // end of byte
+          _bitcount = 0;                // end of byte
           break;
   default: // in case of weird error and end of byte reception re-sync
           _bitcount = 0;
@@ -642,155 +642,194 @@ _ps2mode = 0;
     */
 uint16_t translate( void )
 {
-uint8_t   index, length, data;
-uint16_t  retdata;
+    uint8_t   index, length, data;
+    uint16_t  retdata;
 
-// get next character
-// Check first something to fetch
-index = _tail;
-// check for empty buffer
-if( index == _head )
-  return 0;
-index++;
-if( index >= _RX_BUFFER_SIZE )
-  index = 0;
-_tail = index;
-// Get the flags byte break modes etc in this order
-data = _rx_buffer[ index ] & 0xFF;
-index = ( _rx_buffer[ index ] & 0xFF00 ) >> 8;
+    // get next character
+    // Check first something to fetch
+    index = _tail;
 
-// Catch special case of PAUSE key
-if( index & _E1_MODE )
-  return  PS2_KEY_PAUSE + _FUNCTION;
+    // check for empty buffer
+    if( index == _head )
+        return 0;
+    index++;
+    if( index >= _RX_BUFFER_SIZE )
+        index = 0;
+    _tail = index;
+   
+    // Get the flags byte break modes etc in this order
+    data = _rx_buffer[ index ] & 0xFF;
+    index = ( _rx_buffer[ index ] & 0xFF00 ) >> 8;
 
-// Ignore anything not actual keycode but command/response
-// Return untranslated as valid
-if( ( data >= PS2_KC_BAT && data != PS2_KC_LANG1 && data != PS2_KC_LANG2 )
-    || ( index & _WAIT_RESPONSE ) )
-  return ( uint16_t )data;
-
-// Gather the break of key status
-if( index & _BREAK_KEY )
-  PS2_keystatus |= _BREAK;
-else
-  PS2_keystatus &= ~_BREAK;
-
-retdata = 0;    // error code by default
-// Scan appropriate table
-if( index & _E0_MODE )
-  {
-  length = sizeof( extended_key ) / sizeof( extended_key[ 0 ] );
-  for( index = 0; index < length; index++ )
-#if defined( PS2_REQUIRES_PROGMEM )
-     if( data == pgm_read_byte( &extended_key[ index ][ 0 ] ) )
-       {
-       retdata = pgm_read_byte( &extended_key[ index ][ 1 ] );
-#else
-     if( data == extended_key[ index ][ 0 ] )
-       {
-       retdata = extended_key[ index ][ 1 ];
-#endif
-       break;
-       }
-  }
-else
-  {
-  length = sizeof( single_key ) / sizeof( single_key[ 0 ] );
-  for( index = 0; index < length; index++ )
-#if defined( PS2_REQUIRES_PROGMEM )
-     if( data == pgm_read_byte( &single_key[ index ][ 0 ] ) )
-       {
-       retdata = pgm_read_byte( &single_key[ index ][ 1 ] );
-#else
-     if( data == single_key[ index ][ 0 ] )
-       {
-       retdata = single_key[ index ][ 1 ];
-#endif
-       break;
-       }
-  }
-// trap not found key
-if( index == length )
-  retdata = 0;
-/* valid found values only */
-if( retdata > 0 )
-  {
-  if( retdata <= PS2_KEY_CAPS )
-    {   // process lock keys need second make to turn off
-    if( PS2_keystatus & _BREAK )
-      {
-      PS2_lockstate[ retdata ] = 0; // Set received a break so next make toggles LOCK status
-      retdata = PS2_KEY_IGNORE;     // ignore key
-      }
-    else
-      {
-      if( PS2_lockstate[ retdata ] == 1 )
-        retdata = PS2_KEY_IGNORE;   // ignore key if make and not received break
-      else
-        {
-        PS2_lockstate[ retdata ] = 1;
-        switch( retdata )
-          {
-          case PS2_KEY_CAPS:   index = PS2_LOCK_CAPS;
-                               // Set CAPS lock if not set before
-                               if( PS2_keystatus & _CAPS )
-                                 PS2_keystatus &= ~_CAPS;
-                               else
-                                 PS2_keystatus |= _CAPS;
-                               break;
-          case PS2_KEY_SCROLL: index = PS2_LOCK_SCROLL;
-                               break;
-          case PS2_KEY_NUM:    index = PS2_LOCK_NUM;
-                               break;
-          }
-        // Now update PS2_led_lock status to match
-        if( PS2_led_lock & index )
-          {
-          PS2_led_lock &= ~index;
-          PS2_keystatus |= _BREAK;     // send as break
-          }
-        else
-          PS2_led_lock |= index;
-       set_lock( );
-        }
-      }
+    // Catch special case of PAUSE key
+    if( index & _E1_MODE )
+    {
+        return  PS2_KEY_PAUSE + _FUNCTION;
     }
-  else
-    if( retdata >= PS2_KEY_L_SHIFT && retdata <= PS2_KEY_R_GUI )
-      { // Update bits for _SHIFT, _CTRL, _ALT, _ALT GR, _GUI in status
-#if defined( PS2_REQUIRES_PROGMEM )
-      index = pgm_read_byte( &control_flags[ retdata - PS2_KEY_L_SHIFT ] );
-#else
-      index = control_flags[ retdata - PS2_KEY_L_SHIFT ];
-#endif
-      if( PS2_keystatus & _BREAK )
-        PS2_keystatus &= ~index;
-      else
-        // if already set ignore repeats if flag set
-        if( ( PS2_keystatus & index ) && ( _mode & _NO_REPEATS ) )
-          retdata = PS2_KEY_IGNORE; // ignore repeat _SHIFT, _CTRL, _ALT, _GUI
-        else
-          PS2_keystatus |= index;
-      }
-    else
-      // Numeric keypad ONLY works in numlock state or when _SHIFT status
-      if( retdata >= PS2_KEY_KP0 && retdata <=  PS2_KEY_KP_DOT )
-        if( !( PS2_led_lock & PS2_LOCK_NUM ) || ( PS2_keystatus & _SHIFT ) )
-#if defined( PS2_REQUIRES_PROGMEM )
-          retdata = pgm_read_byte( &scroll_remap[ retdata - PS2_KEY_KP0 ] );
-#else
-          retdata = scroll_remap[ retdata - PS2_KEY_KP0 ];
-#endif
-  // Sort break code handling or ignore for all having processed the _SHIFT etc status
-  if( ( PS2_keystatus & _BREAK ) && ( _mode & _NO_BREAKS ) )
-    return ( uint16_t )PS2_KEY_IGNORE;
-  // Assign Function keys _mode
-  if( ( retdata <= PS2_KEY_SPACE || retdata >= PS2_KEY_F1 ) && retdata != PS2_KEY_EUROPE2 )
-    PS2_keystatus |= _FUNCTION;
-  else
-    PS2_keystatus &= ~_FUNCTION;
-  }
-return ( retdata | ( (uint16_t)PS2_keystatus << 8 ) );
+
+    // Ignore anything not actual keycode but command/response
+    // Return untranslated as valid
+    if( ( data >= PS2_KC_BAT && data != PS2_KC_LANG1 && data != PS2_KC_LANG2 ) || ( index & _WAIT_RESPONSE ) )
+    {
+        return ( uint16_t )data;
+    }
+
+    // Gather the break of key status
+    if( index & _BREAK_KEY )
+    {
+        PS2_keystatus |= _BREAK;
+    } else
+    {
+        PS2_keystatus &= ~_BREAK;
+    }
+
+    retdata = 0;    // error code by default
+
+    // Scan appropriate table
+    if( index & _E0_MODE )
+    {
+        length = sizeof( extended_key ) / sizeof( extended_key[ 0 ] );
+        for( index = 0; index < length; index++ )
+        {
+            #if defined( PS2_REQUIRES_PROGMEM )
+            if( data == pgm_read_byte( &extended_key[ index ][ 0 ] ) )
+            {
+                retdata = pgm_read_byte( &extended_key[ index ][ 1 ] );
+            #else
+            if( data == extended_key[ index ][ 0 ] )
+            {
+                retdata = extended_key[ index ][ 1 ];
+            #endif
+                break;
+            }
+        }
+    } else
+    {
+        length = sizeof( single_key ) / sizeof( single_key[ 0 ] );
+        for( index = 0; index < length; index++ )
+        {
+            #if defined( PS2_REQUIRES_PROGMEM )
+            if( data == pgm_read_byte( &single_key[ index ][ 0 ] ) )
+            {
+                retdata = pgm_read_byte( &single_key[ index ][ 1 ] );
+            #else
+            if( data == single_key[ index ][ 0 ] )
+            {
+                retdata = single_key[ index ][ 1 ];
+            #endif
+                break;
+            }
+        }
+    }
+
+    // trap not found key
+    if( index == length )
+    {
+        retdata = 0;
+    }
+
+    /* valid found values only */
+    if( retdata > 0 )
+    {
+        if( retdata <= PS2_KEY_CAPS )
+        {   // process lock keys need second make to turn off
+            if( PS2_keystatus & _BREAK )
+            {
+                PS2_lockstate[ retdata ] = 0; // Set received a break so next make toggles LOCK status
+                retdata = PS2_KEY_IGNORE;     // ignore key
+            } else {
+
+                if( PS2_lockstate[ retdata ] == 1 )
+                {
+                    retdata = PS2_KEY_IGNORE;   // ignore key if make and not received break
+                } else
+                {
+                    PS2_lockstate[ retdata ] = 1;
+                    switch( retdata )
+                    {
+                        case PS2_KEY_CAPS:   index = PS2_LOCK_CAPS;
+                            // Set CAPS lock if not set before
+                            if( PS2_keystatus & _CAPS )
+                            {
+                                PS2_keystatus &= ~_CAPS;
+                            } else
+                            {
+                                PS2_keystatus |= _CAPS;
+                            }
+                            break;
+                        case PS2_KEY_SCROLL: index = PS2_LOCK_SCROLL;
+                            break;
+                        case PS2_KEY_NUM:    index = PS2_LOCK_NUM;
+                            break;
+                    }
+                    // Now update PS2_led_lock status to match
+                    if( PS2_led_lock & index )
+                    {
+                        PS2_led_lock &= ~index;
+                        PS2_keystatus |= _BREAK;     // send as break
+                    } else
+                    {
+                        PS2_led_lock |= index;
+                    }
+                    set_lock( );
+                }
+            }
+        } else
+        {
+
+            if( retdata >= PS2_KEY_L_SHIFT && retdata <= PS2_KEY_R_GUI )
+            {   // Update bits for _SHIFT, _CTRL, _ALT, _ALT GR, _GUI in status
+                #if defined( PS2_REQUIRES_PROGMEM )
+                index = pgm_read_byte( &control_flags[ retdata - PS2_KEY_L_SHIFT ] );
+                #else
+                index = control_flags[ retdata - PS2_KEY_L_SHIFT ];
+                #endif
+                if( PS2_keystatus & _BREAK )
+                {
+                    PS2_keystatus &= ~index;
+                }
+                    
+                // if already set ignore repeats if flag set
+                else if( ( PS2_keystatus & index ) && ( _mode & _NO_REPEATS ) )
+                {
+                    retdata = PS2_KEY_IGNORE; // ignore repeat _SHIFT, _CTRL, _ALT, _GUI
+                } else
+                {
+                    PS2_keystatus |= index;
+                }
+            } else
+            {
+                // Numeric keypad ONLY works in numlock state or when _SHIFT status
+                if( retdata >= PS2_KEY_KP0 && retdata <=  PS2_KEY_KP_DOT )
+                {
+                    if( !( PS2_led_lock & PS2_LOCK_NUM ) || ( PS2_keystatus & _SHIFT ) )
+                    {
+                        #if defined( PS2_REQUIRES_PROGMEM )
+                        retdata = pgm_read_byte( &scroll_remap[ retdata - PS2_KEY_KP0 ] );
+                        #else
+                        retdata = scroll_remap[ retdata - PS2_KEY_KP0 ];
+                        #endif
+                    }
+                }
+            }
+
+            // Sort break code handling or ignore for all having processed the _SHIFT etc status
+            if( ( PS2_keystatus & _BREAK ) && ( _mode & _NO_BREAKS ) )
+            {
+                return ( uint16_t )PS2_KEY_IGNORE;
+            }
+
+            // Assign Function keys _mode
+            if( ( retdata <= PS2_KEY_SPACE || retdata >= PS2_KEY_F1 ) && retdata != PS2_KEY_EUROPE2 )
+            {
+                PS2_keystatus |= _FUNCTION;
+            } else
+            {
+                PS2_keystatus &= ~_FUNCTION;
+            }
+        }
+    }
+    return ( retdata | ( (uint16_t)PS2_keystatus << 8 ) );
 }
 
 
@@ -803,12 +842,12 @@ void set_lock( )
 // Workaround: Send one byte, wait for one response with a delay loop, send next byte.
 send_byte( PS2_KC_LOCK );        // send command
 if( ( send_byte( PS2_KEY_IGNORE ) ) ) // wait ACK
-	send_next( );                 // if idle start transmission
+    send_next( );                 // if idle start transmission
 // A delay of less than 10mS will cause lockup or abort!!!
 delayMicroseconds( 10000 );
 send_byte( PS2_led_lock );       // send data from internal variable
 if( ( send_byte( PS2_KEY_IGNORE ) ) ) // wait ACK
-	send_next( );                 // if idle start transmission
+    send_next( );                 // if idle start transmission
 }
 
 

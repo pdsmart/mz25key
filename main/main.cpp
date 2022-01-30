@@ -251,11 +251,12 @@ IRAM_ATTR unsigned char updateMatrix(uint16_t data)
     uint8_t   idx;
     uint8_t   idx2;
     uint8_t   changed = 0;
+    uint8_t   matchExact = 0;
 
     // Loop through the entire conversion table to find a match on this key, if found appy the conversion to the virtual
     // switch matrix.
     //
-    for(idx=0; idx < NUMELEM(PS2toMZ); idx++)
+    for(idx=0, changed=0, matchExact=0; idx < NUMELEM(PS2toMZ) && (changed == 0 || (changed == 1 && matchExact == 0)); idx++)
     {
         // Match key code?
         if(PS2toMZ[idx][PSMZTBL_KEYPOS] == (uint8_t)(data&0xFF))
@@ -263,11 +264,21 @@ IRAM_ATTR unsigned char updateMatrix(uint16_t data)
             // Match Raw, Shift, Function, Control, ALT or ALT-Gr?
             if( (PS2toMZ[idx][PSMZTBL_SHIFTPOS] == 0 && PS2toMZ[idx][PSMZTBL_FUNCPOS] == 0 && PS2toMZ[idx][PSMZTBL_CTRLPOS] == 0 && PS2toMZ[idx][PSMZTBL_ALTPOS] == 0 && PS2toMZ[idx][PSMZTBL_ALTGRPOS] == 0) ||
                 ((data & PS2_SHIFT)    && PS2toMZ[idx][PSMZTBL_SHIFTPOS] == 1) || 
-                ((data & PS2_FUNCTION) && PS2toMZ[idx][PSMZTBL_FUNCPOS]  == 1) ||
                 ((data & PS2_CTRL)     && PS2toMZ[idx][PSMZTBL_CTRLPOS]  == 1) ||
                 ((data & PS2_ALT)      && PS2toMZ[idx][PSMZTBL_ALTPOS]   == 1) ||
-                ((data & PS2_ALT_GR)   && PS2toMZ[idx][PSMZTBL_ALTGRPOS] == 1) )
+                ((data & PS2_ALT_GR)   && PS2toMZ[idx][PSMZTBL_ALTGRPOS] == 1) ||
+                ((data & PS2_GUI)      && PS2toMZ[idx][PSMZTBL_SHIFTPOS] == 1) || 
+                ((data & PS2_FUNCTION) && PS2toMZ[idx][PSMZTBL_FUNCPOS]  == 1) )
             {
+                
+                // Exact entry match, data + control key? On an exact match we only process the first key. On a data only match we fall through to include the data and control key matches to allow for un-coded keys, ie. Japanese characters.
+                matchExact = ((data & PS2_SHIFT)    && PS2toMZ[idx][PSMZTBL_SHIFTPOS] == 1) || 
+                             ((data & PS2_CTRL)     && PS2toMZ[idx][PSMZTBL_CTRLPOS]  == 1) ||
+                             ((data & PS2_ALT_GR)   && PS2toMZ[idx][PSMZTBL_ALTGRPOS] == 1) ||
+                             ((data & PS2_ALT)      && PS2toMZ[idx][PSMZTBL_ALTPOS]   == 1) ||
+                             ((data & PS2_GUI)      && PS2toMZ[idx][PSMZTBL_ALTPOS]   == 1) ||
+                             ((data & PS2_FUNCTION) && PS2toMZ[idx][PSMZTBL_FUNCPOS]  == 1) ? 1 : 0;
+ 
                 // RELEASE (PS2_BREAK == 1) or PRESS?
                 if((data & PS2_BREAK))
                 {
@@ -359,17 +370,8 @@ IRAM_ATTR void ps2Interface( void * pvParameters )
     uint16_t            scanCode   = 0x0000;
     #if defined(CONFIG_DEBUG_OLED) || !defined(CONFIG_OLED_DISABLED)
       uint8_t           dataChange = 0;
-      static int        clrScreen  = 1;
       static int        scanPrtCol = 0;
-      static uint32_t   clrTimer   = 0;
-    #endif
-
-    #if defined(CONFIG_DEBUG_OLED) || !defined(CONFIG_OLED_DISABLED)
-        if((clrTimer > 0 && --clrTimer == 0) || ((scanCode&0xFF) == PS2_KEY_C && scanCode & PS2_BREAK ))
-        {
-            // Clear old scan code data. Add OLED code if needed. 
-            scanPrtCol = 0;
-        }
+      static uint32_t   rfshTimer  = 0;
     #endif
 
     while(1)
@@ -379,17 +381,9 @@ IRAM_ATTR void ps2Interface( void * pvParameters )
         {
             printf("%04x\n", scanCode);
             #if defined(CONFIG_DEBUG_OLED) || !defined(CONFIG_OLED_DISABLED)
-                // Clear screen as requested.
-                if(clrScreen == 1)
-                {
-                //  ssd1306_clear_screen(&SSD1306, false);
-                    clrScreen = 0;
-                }
-
                 // Output the scan code for verification.
                 dbgprintf("%04x,", scanCode);
                 if(scanPrtCol++ >= 3) scanPrtCol = 0;
-                clrTimer = 2000000;
             #endif
 
             // Update the virtual matrix with the new key value.
@@ -411,26 +405,33 @@ IRAM_ATTR void ps2Interface( void * pvParameters )
                                                       (((mzControl.keyMatrix[idx] >> 1) & 0x01) ^ 0x01) << CONFIG_MZ_KDO1 |
                                                       (((mzControl.keyMatrix[idx]     ) & 0x01) ^ 0x01) << CONFIG_MZ_KDO0 ;
                 }
-
-                #if defined(CONFIG_DEBUG_OLED) || !defined(CONFIG_OLED_DISABLED)
-                    // Output the MZ virtual keyboard matrix for verification.
-                    uint8_t oledBuf[8][16];
-                    for(int idx=0; idx < 15; idx++)
-                    {
-                        for(int idx2=0; idx2 < 8; idx2++)
-                        {
-                            oledBuf[idx2][idx] = ((mzControl.keyMatrix[idx] >> idx2)&0x01) == 1 ? '1' : '0';
-                        }
-                    }
-
-                    // Print out the matrix, transposed - see MZKeyTable.h for the map, second table.
-                    for(int idx=0; idx < 8; idx++)
-                    {
-                        ssd1306_display_text(&SSD1306, idx, (char *)oledBuf[idx], 15, false);
-                    }
-                #endif
             }
         }
+
+        #if defined(CONFIG_DEBUG_OLED) || !defined(CONFIG_OLED_DISABLED)
+            if(dataChange || (rfshTimer > 0 && --rfshTimer == 0))
+            {
+                // Output the MZ virtual keyboard matrix for verification.
+                uint8_t oledBuf[8][16];
+                for(int idx=0; idx < 15; idx++)
+                {
+                    for(int idx2=0; idx2 < 8; idx2++)
+                    {
+                        oledBuf[idx2][idx] = ((mzControl.keyMatrix[idx] >> idx2)&0x01) == 1 ? '1' : '0';
+                    }
+                }
+
+                // Print out the matrix, transposed - see MZKeyTable.h for the map, second table.
+                for(int idx=0; idx < 8; idx++)
+                {
+                    ssd1306_display_text(&SSD1306, idx, (char *)oledBuf[idx], 15, false);
+                }
+
+                // Clear timer for next refresh.
+                rfshTimer = 2000000;
+                dataChange = 0;
+            }
+        #endif
 
         // Let other tasks run.
         vTaskDelay(0);

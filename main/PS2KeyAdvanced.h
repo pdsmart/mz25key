@@ -236,26 +236,26 @@
 #define PS2_KEY_INSERT      0x19
 #define PS2_KEY_DELETE      0x1A
 #define PS2_KEY_ESC         0x1B
-#define PS2_KEY_BS          0x08
-#define PS2_KEY_TAB         0x09
-#define PS2_KEY_ENTER       0x0D
-#define PS2_KEY_SPACE       0x20
-#define PS2_KEY_KP0         0xA0
-#define PS2_KEY_KP1         0xA1
-#define PS2_KEY_KP2         0xA2
-#define PS2_KEY_KP3         0xA3
-#define PS2_KEY_KP4         0xA4
-#define PS2_KEY_KP5         0xA5
-#define PS2_KEY_KP6         0xA6
-#define PS2_KEY_KP7         0xA7
-#define PS2_KEY_KP8         0xA8
-#define PS2_KEY_KP9         0xA9
-#define PS2_KEY_KP_DOT      0xAA
-#define PS2_KEY_KP_ENTER    0xAB
-#define PS2_KEY_KP_PLUS     0xAC
-#define PS2_KEY_KP_MINUS    0xAD
-#define PS2_KEY_KP_TIMES    0xAE
-#define PS2_KEY_KP_DIV      0xAF
+#define PS2_KEY_BS          0x1C
+#define PS2_KEY_TAB         0x1D
+#define PS2_KEY_ENTER       0x1E
+#define PS2_KEY_SPACE       0x1F
+#define PS2_KEY_KP0         0x20
+#define PS2_KEY_KP1         0x21
+#define PS2_KEY_KP2         0x22
+#define PS2_KEY_KP3         0x23
+#define PS2_KEY_KP4         0x24
+#define PS2_KEY_KP5         0x25
+#define PS2_KEY_KP6         0x26
+#define PS2_KEY_KP7         0x27
+#define PS2_KEY_KP8         0x28
+#define PS2_KEY_KP9         0x29
+#define PS2_KEY_KP_DOT      0x2A
+#define PS2_KEY_KP_ENTER    0x2B
+#define PS2_KEY_KP_PLUS     0x2C
+#define PS2_KEY_KP_MINUS    0x2D
+#define PS2_KEY_KP_TIMES    0x2E
+#define PS2_KEY_KP_DIV      0x2F
 #define PS2_KEY_0           0X30
 #define PS2_KEY_1           0X31
 #define PS2_KEY_2           0X32
@@ -266,12 +266,15 @@
 #define PS2_KEY_7           0X37
 #define PS2_KEY_8           0X38
 #define PS2_KEY_9           0X39
-#define PS2_KEY_APOS        0X27
-#define PS2_KEY_COMMA       0X2C
-#define PS2_KEY_MINUS       0X2D
-#define PS2_KEY_DOT         0X2E
-#define PS2_KEY_DIV         0X2F
-#define PS2_KEY_AT          0X40
+#define PS2_KEY_APOS        0X3A
+#define PS2_KEY_COMMA       0X3B
+#define PS2_KEY_MINUS       0X3C
+#define PS2_KEY_DOT         0X3D
+#define PS2_KEY_DIV         0X3E
+/* Some Numeric keyboards have an '=' on right keypad */
+#define PS2_KEY_KP_EQUAL    0x3F
+/* Single quote or back quote */
+#define PS2_KEY_SINGLE      0X40
 #define PS2_KEY_A           0X41
 #define PS2_KEY_B           0X42
 #define PS2_KEY_C           0X43
@@ -298,63 +301,71 @@
 #define PS2_KEY_X           0X58
 #define PS2_KEY_Y           0X59
 #define PS2_KEY_Z           0X5A
-#define PS2_KEY_SEMI        0X3B
+#define PS2_KEY_SEMI        0X5B
 #define PS2_KEY_BACK        0X5C
-#define PS2_KEY_OPEN_SQ     0X5B
-#define PS2_KEY_CLOSE_SQ    0X5D
-#define PS2_KEY_EQUAL       0X3D
-#define PS2_KEY_HASH        0x23
-#define PS2_KEY_PIPE        0x7C
-#define PS2_KEY_LESSTHAN    0x3C
-#define PS2_KEY_BTICK       0x60
+#define PS2_KEY_OPEN_SQ     0X5D
+#define PS2_KEY_CLOSE_SQ    0X5E
+#define PS2_KEY_EQUAL       0X5F
 /* Some Numeric keypads have a comma key */
-#define PS2_KEY_KP_COMMA    0xB0
-#define PS2_KEY_F1          0XB1
-#define PS2_KEY_F2          0XB2
-#define PS2_KEY_F3          0XB3
-#define PS2_KEY_F4          0XB4
-#define PS2_KEY_F5          0XB5
-#define PS2_KEY_F6          0XB6
-#define PS2_KEY_F7          0XB7
-#define PS2_KEY_F8          0XB8
-#define PS2_KEY_F9          0XB9
-#define PS2_KEY_F10         0XBA
-#define PS2_KEY_F11         0XBB
-#define PS2_KEY_F12         0XBC
-#define PS2_KEY_NEXT_TR     0XBD
-#define PS2_KEY_PREV_TR     0XBE
-#define PS2_KEY_STOP        0XBF
-#define PS2_KEY_PLAY        0XC0
-#define PS2_KEY_MUTE        0XC1
-#define PS2_KEY_VOL_UP      0XC2
-#define PS2_KEY_VOL_DN      0XC3
-#define PS2_KEY_MEDIA       0XC4
-#define PS2_KEY_EMAIL       0XC5
-#define PS2_KEY_CALC        0XC6
-#define PS2_KEY_COMPUTER    0XC7
-#define PS2_KEY_WEB_SEARCH  0XC8
-#define PS2_KEY_WEB_HOME    0XC9
-#define PS2_KEY_WEB_BACK    0XCA
-#define PS2_KEY_WEB_FORWARD 0XCB
-#define PS2_KEY_WEB_STOP    0XCC
-#define PS2_KEY_WEB_REFRESH 0XCD
-#define PS2_KEY_WEB_FAVOR   0XCE
-#define PS2_KEY_EUROPE2     0XCF
-#define PS2_KEY_POWER       0XD0
-#define PS2_KEY_SLEEP       0XD1
-#define PS2_KEY_WAKE        0XD2
-#define PS2_KEY_INTL1       0XD3
-#define PS2_KEY_INTL2       0XD4
-#define PS2_KEY_INTL3       0XD5
-#define PS2_KEY_INTL4       0XD6
-#define PS2_KEY_INTL5       0XD7
-#define PS2_KEY_LANG1       0XD8
-#define PS2_KEY_LANG2       0XD9
-#define PS2_KEY_LANG3       0XDA
-#define PS2_KEY_LANG4       0XDB
-#define PS2_KEY_LANG5       0xDC
-/* Some Numeric keyboards have an '=' on right keypad */
-#define PS2_KEY_KP_EQUAL    0xDD
+#define PS2_KEY_KP_COMMA    0x60
+#define PS2_KEY_F1          0X61
+#define PS2_KEY_F2          0X62
+#define PS2_KEY_F3          0X63
+#define PS2_KEY_F4          0X64
+#define PS2_KEY_F5          0X65
+#define PS2_KEY_F6          0X66
+#define PS2_KEY_F7          0X67
+#define PS2_KEY_F8          0X68
+#define PS2_KEY_F9          0X69
+#define PS2_KEY_F10         0X6A
+#define PS2_KEY_F11         0X6B
+#define PS2_KEY_F12         0X6C
+#define PS2_KEY_F13         0X6D
+#define PS2_KEY_F14         0X6E
+#define PS2_KEY_F15         0X6F
+#define PS2_KEY_F16         0X70
+#define PS2_KEY_F17         0X71
+#define PS2_KEY_F18         0X72
+#define PS2_KEY_F19         0X73
+#define PS2_KEY_F20         0X74
+#define PS2_KEY_F21         0X75
+#define PS2_KEY_F22         0X76
+#define PS2_KEY_F23         0X77
+#define PS2_KEY_F24         0X78
+#define PS2_KEY_NEXT_TR     0X79
+#define PS2_KEY_PREV_TR     0X7A
+#define PS2_KEY_STOP        0X7B
+#define PS2_KEY_PLAY        0X7C
+#define PS2_KEY_MUTE        0X7D
+#define PS2_KEY_VOL_UP      0X7E
+#define PS2_KEY_VOL_DN      0X7F
+#define PS2_KEY_MEDIA       0X80
+#define PS2_KEY_EMAIL       0X81
+#define PS2_KEY_CALC        0X82
+#define PS2_KEY_COMPUTER    0X83
+#define PS2_KEY_WEB_SEARCH  0X84
+#define PS2_KEY_WEB_HOME    0X85
+#define PS2_KEY_WEB_BACK    0X86
+#define PS2_KEY_WEB_FORWARD 0X87
+#define PS2_KEY_WEB_STOP    0X88
+#define PS2_KEY_WEB_REFRESH 0X89
+#define PS2_KEY_WEB_FAVOR   0X8A
+#define PS2_KEY_EUROPE2     0X8B
+#define PS2_KEY_POWER       0X8C
+#define PS2_KEY_SLEEP       0X8D
+#define PS2_KEY_WAKE        0X90
+#define PS2_KEY_INTL1       0X91
+#define PS2_KEY_INTL2       0X92
+#define PS2_KEY_INTL3       0X93
+#define PS2_KEY_INTL4       0X94
+#define PS2_KEY_INTL5       0X95
+#define PS2_KEY_LANG1       0X96
+#define PS2_KEY_LANG2       0X97
+#define PS2_KEY_LANG3       0X98
+#define PS2_KEY_LANG4       0X99
+#define PS2_KEY_LANG5       0xA0
+#define PS2_KEY_BTICK       0X9A
+#define PS2_KEY_HASH        0X9B
 
 /*
   Purpose: Provides advanced access to PS2 keyboards
@@ -374,7 +385,8 @@ class PS2KeyAdvanced {
        The best place to call this method is in the setup routine.    */
     void begin( uint8_t, uint8_t );
 
-    uint8_t keyAvailable();
+    // Additional key available check which doesnt affect the queue.
+    uint8_t keyAvailable(void);
 
     /* Returns number of codes available or 0 for none */
     uint8_t available( );
@@ -391,7 +403,7 @@ class PS2KeyAdvanced {
     /* Sets the current status of Locks and LEDs
        Use macro defines added together from
         PS2_LOCK_NUM    PS2_LOCK_CAPS   PS2_LOCK_SCROLL */
-    void setLock( uint8_t );
+    void setLock( byte );
 
     /* Set library to not send break key codes
             1 = no break codes
