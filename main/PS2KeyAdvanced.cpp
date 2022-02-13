@@ -642,7 +642,7 @@ _ps2mode = 0;
     */
 uint16_t translate( void )
 {
-    uint8_t   index, length, data;
+    uint8_t   index, length, data, status;
     uint16_t  retdata;
 
     // get next character
@@ -655,7 +655,17 @@ uint16_t translate( void )
     index++;
     if( index >= _RX_BUFFER_SIZE )
         index = 0;
-    _tail = index;
+
+    // Special handling for PAUSE/BREAK, PAUSE key doesnt send a BREAK code yet MZ machines need SHIFT (hold) -> BREAK to recognise a BREAK, CTRL+BREAK will not work.
+    // In this case we inject a BREAK code by setting the flag on the received code.
+    status = (( _rx_buffer[ index ] & 0xFF00 ) >> 8);
+    if( (status & _E1_MODE) && (status & _BREAK))
+    {
+       _rx_buffer[index] &= ~PS2_BREAK;
+    } else
+    {
+        _tail = index;
+    }
    
     // Get the flags byte break modes etc in this order
     data = _rx_buffer[ index ] & 0xFF;
@@ -664,9 +674,9 @@ uint16_t translate( void )
     // Catch special case of PAUSE key
     if( index & _E1_MODE )
     {
-        return  PS2_KEY_PAUSE + _FUNCTION;
+        return  ( (uint16_t)PS2_keystatus << 8 ) | PS2_KEY_PAUSE | PS2_FUNCTION | (status & _BREAK ? 0 : PS2_BREAK);
     }
-
+    
     // Ignore anything not actual keycode but command/response
     // Return untranslated as valid
     if( ( data >= PS2_KC_BAT && data != PS2_KC_LANG1 && data != PS2_KC_LANG2 ) || ( index & _WAIT_RESPONSE ) )
@@ -736,18 +746,26 @@ uint16_t translate( void )
             if( PS2_keystatus & _BREAK )
             {
                 PS2_lockstate[ retdata ] = 0; // Set received a break so next make toggles LOCK status
-                retdata = PS2_KEY_IGNORE;     // ignore key
+                // MZ-2500 uses one make-break cycle to enable and one make-break to disable, so the BREAK is needed.
+                if(retdata != PS2_KEY_CAPS)
+                {
+                    retdata = PS2_KEY_IGNORE;     // ignore key
+                }
             } else {
 
                 if( PS2_lockstate[ retdata ] == 1 )
                 {
+printf("PLEASE REMOVE ME translate: %04x, %d\n", retdata, PS2_lockstate[ retdata ]);
                     retdata = PS2_KEY_IGNORE;   // ignore key if make and not received break
+                                                // As per above, MZ-2500 needs both events, so this code changed from original authors.
                 } else
                 {
                     PS2_lockstate[ retdata ] = 1;
                     switch( retdata )
                     {
-                        case PS2_KEY_CAPS:   index = PS2_LOCK_CAPS;
+                        case PS2_KEY_CAPS:   
+                            index = PS2_LOCK_CAPS;
+
                             // Set CAPS lock if not set before
                             if( PS2_keystatus & _CAPS )
                             {
@@ -757,16 +775,21 @@ uint16_t translate( void )
                                 PS2_keystatus |= _CAPS;
                             }
                             break;
-                        case PS2_KEY_SCROLL: index = PS2_LOCK_SCROLL;
+                        case PS2_KEY_SCROLL:
+                            index = PS2_LOCK_SCROLL;
                             break;
-                        case PS2_KEY_NUM:    index = PS2_LOCK_NUM;
+                        case PS2_KEY_NUM:
+                            index = PS2_LOCK_NUM;
                             break;
                     }
                     // Now update PS2_led_lock status to match
                     if( PS2_led_lock & index )
                     {
                         PS2_led_lock &= ~index;
-                        PS2_keystatus |= _BREAK;     // send as break
+                        if(index != PS2_LOCK_CAPS)
+                        {
+                            PS2_keystatus |= _BREAK;     // send as break
+                        }
                     } else
                     {
                         PS2_led_lock |= index;
@@ -1002,6 +1025,7 @@ while( i < ( _KEY_BUFF_SIZE - 1 ) ) // process if not full
   if( keyAvailable( ) )         // not check for more keys to process
     {
     data = translate( );         // get next translated key
+
     if( data == 0 )             // unless in buffer is empty
       break;
     if( (data & 0xFF) != PS2_KEY_IGNORE && (data & 0xFF) > 0)
