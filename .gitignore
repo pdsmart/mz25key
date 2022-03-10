@@ -46,7 +46,6 @@ main/CMakeLists.txt.orig
 sdkconfigq
 0001-flash-permance.patch
 0001-flash-permance.zip
-README.md
 components.x/
 components/
 main/main.cpp.bak2
