@@ -251,7 +251,12 @@
         PS2_KEY_PGUP,      MZ_ALL,       0,        0,         0,        0,        0,           0,       0xFF,    0xFF,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,     // Not assigned.
         PS2_KEY_DELETE,    MZ_ALL,       0,        0,         0,        0,        0,           0,       0x0A,    0x08,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,     // DELETE
         PS2_KEY_END,       MZ_ALL,       0,        0,         0,        0,        0,           0,       0xFF,    0xFF,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,     // Not assigned.
-        PS2_KEY_PGDN,      MZ_ALL,       0,        0,         0,        0,        0,           0,       0xFF,    0xFF,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,
+      #if defined(CONFIG_MODEL_MZ2500)
+        PS2_KEY_PGDN,      MZ_ALL,       0,        0,         0,        0,        0,           0,       0xFF,    0xFF,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,     // Not mapped
+      #endif
+      #if defined(CONFIG_MODEL_MZ2800)
+        PS2_KEY_PGDN,      MZ_ALL,       0,        0,         0,        0,        0,           0,       0x0C,    0x10,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,     // Japanese Key - Previous
+      #endif
         PS2_KEY_UP_ARROW,  MZ_ALL,       0,        0,         0,        0,        0,           0,       0x03,    0x08,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,     // Up Arrow
         PS2_KEY_L_ARROW,   MZ_ALL,       0,        0,         0,        0,        0,           0,       0x03,    0x20,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,     // Left Arrow
         PS2_KEY_DN_ARROW,  MZ_ALL,       0,        0,         0,        0,        0,           0,       0x03,    0x10,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,     // Down Arrow
@@ -291,7 +296,12 @@
         PS2_KEY_L_SHIFT,   MZ_ALL,       0,        0,         0,        0,        0,           0,       0x0B,    0x04,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF, 
         PS2_KEY_R_SHIFT,   MZ_ALL,       0,        0,         0,        0,        0,           0,       0x0B,    0x04,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF, 
         PS2_KEY_L_CTRL,    MZ_ALL,       0,        0,         0,        0,        0,           0,       0x0B,    0x10,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF, 
-        PS2_KEY_R_CTRL,    MZ_ALL,       0,        0,         0,        0,        0,           0,       0x0B,    0x10,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF, 
+      #if defined(CONFIG_MODEL_MZ2500)
+        PS2_KEY_R_CTRL,    MZ_ALL,       0,        0,         0,        0,        0,           0,       0x0B,    0x10,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,     // Map to Control
+      #endif
+      #if defined(CONFIG_MODEL_MZ2800)
+        PS2_KEY_R_CTRL,    MZ_ALL,       0,        0,         0,        0,        0,           0,       0x0C,    0x08,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF,     // Japanese Key - Cancel
+      #endif
     	0,                 MZ_ALL,       0,        0,         0,        0,        0,           0,       0xFF,    0xFF,    0xFF,    0xFF,    0xFF,    0xFF,       0xFF,    0xFF,    0xFF,    0xFF, 
     };
 #endif

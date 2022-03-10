@@ -1,0 +1,33 @@
+### Module positions - created on Tuesday, 22 February 2022 at 12:16:19 ###
+### Printed by Pcbnew version (6.0.1-0)
+## Unit = mm, Angle = deg.
+## Side : top
+# Ref     Val              Package                                           PosX       PosY       Rot  Side
+C1        100uF            C_1210_3225Metric_Pad1.42x2.65mm_HandSolder    82.0700   -91.5500    0.0000  top
+C2        100uF            C_1210_3225Metric_Pad1.42x2.65mm_HandSolder    82.0300   -95.6200    0.0000  top
+C3        100nF            C_0805_2012Metric                              60.0400   -90.5400    0.0000  top
+D1        1N4001           D_1206_3216Metric                              60.6400   -88.3400  180.0000  top
+D2        1N4001           D_1206_3216Metric                              60.6500   -85.9800  180.0000  top
+D3        Power            LED_D3.0mm_Clear                               84.4200   -82.7400    0.0000  top
+F1        500mA            Fuse_1806_4516Metric                           75.5100   -88.5400    0.0000  top
+J1        MZ2500_Keyboard  PinHeader_1x09_P2.00mm_Vertical                55.9200   -85.2200    0.0000  top
+J2        PS/2_Keyboard    Mini_din6_ps2                                  94.0900   -93.3200   90.0000  top
+J3        PGM/OLED         PinHeader_1x08_P2.00mm_Vertical                56.1400   -81.8300   90.0000  top
+JP1       PGM              PinHeader_1x02_P1.27mm_Vertical                69.6400  -104.5600  -90.0000  top
+JP2       ~{RESET}         PinHeader_1x02_P1.27mm_Vertical                65.9400  -104.5600  -90.0000  top
+LG1       Argo_Logo        Argo                                           75.3300   -85.2800    0.0000  top
+R1        100R             R_0805_2012Metric                              52.4500   -87.2400  180.0000  top
+R2        100R             R_0805_2012Metric                              52.4700   -89.2100  180.0000  top
+R3        100R             R_0805_2012Metric                              52.4700   -91.2000    0.0000  top
+R4        100R             R_0805_2012Metric                              52.4500   -93.1600  180.0000  top
+R5        100R             R_0805_2012Metric                              52.4500   -95.1400  180.0000  top
+R6        100R             R_0805_2012Metric                              52.4300   -97.1000  180.0000  top
+R7        100R             R_0805_2012Metric                              52.4500   -99.0600  180.0000  top
+R16       10K              R_0805_2012Metric                              75.0600  -102.2300    0.0000  top
+R17       1K               R_0805_2012Metric                              66.1600   -89.8700    0.0000  top
+R18       10K              R_0805_2012Metric                              69.6600   -86.7500  180.0000  top
+R19       10K              R_0805_2012Metric                              66.1400   -86.7500    0.0000  top
+SW1       WiFi_EN          SW_SPST_B3S-1000                               83.8700  -102.4400  180.0000  top
+U1        AMS1117-3.3      SOT-223-3_TabPin2                              74.0800   -93.5700  180.0000  top
+U2        74LS257          SOIC-16_3.9x9.9mm_P1.27mm                      63.5300   -95.9400   90.0000  top
+## End

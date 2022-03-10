@@ -44,6 +44,24 @@ menu "MZ25Key Configuration"
     endmenu
 
     menu "MZ-2500/2800 Interface"
+        choice "Model"
+            prompt "Machine Model"
+            default MODEL_MZ2500
+            help
+                Choose the target machine on which the interface will be used. The MZ-2500 and MZ-2800 have the same keyboard hardware but the protocol differs and this option
+                will choose the correct protocol.
+
+            config MODEL_MZ2500
+                bool "Sharp MZ-2500"
+                help
+                    The target machine is a Sharp MZ-2500.
+
+            config MODEL_MZ2800
+                bool "Sharp MZ-2800"
+                help
+                    The target machine is a Sharp MZ-2800.
+        endchoice
+
         menu "4Bit Strobe Input"
 
             config MZ_KDB0

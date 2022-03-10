@@ -189,6 +189,8 @@ CONFIG_KEYMAP_WYSE_KB3926=y
 #
 # MZ-2500/2800 Interface
 #
+# CONFIG_MODEL_MZ2500 is not set
+CONFIG_MODEL_MZ2800=y
 
 #
 # 4Bit Strobe Input

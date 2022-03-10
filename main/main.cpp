@@ -110,8 +110,13 @@ PS2KeyAdvanced                  Keyboard;
 // Debug required objects.
 SSD1306_t                       SSD1306;
 
-// Handle to interact with the mz-2500 interface, ps/2 interface and wifi threads.
-TaskHandle_t                    TaskMZ25IF = NULL;
+// Handle to interact with the mz-2500/mz-2800 interface, ps/2 interface and wifi threads.
+#if defined(CONFIG_MODEL_MZ2500)
+    TaskHandle_t                TaskMZ25IF = NULL;
+#endif
+#if defined(CONFIG_MODEL_MZ2800)
+    TaskHandle_t                TaskMZ28IF = NULL;
+#endif
 TaskHandle_t                    TaskPS2IF  = NULL;
 #if defined(CONFIG_MZ_WIFI_ENABLED)
     TaskHandle_t                TaskWIFI   = NULL;
@@ -180,12 +185,15 @@ static portMUX_TYPE             mzMutex  = portMUX_INITIALIZER_UNLOCKED;
     #define dbgprintf(a, ...) {};
 #endif
 
-// Method to connect and interact with the MZ-2500/MZ-2800 keyboard controller.
+// Method to connect and interact with the MZ-5800 keyboard controller. This method is seperate from the MZ-2800
+// as the scan is different and as it is time critical it needs to be per target machine.
+//
 // The basic requirement is to:
 //   1. Detect a falling edge on the RTSN signal
 //   2. Read the provided ROW number.
 //   3. Lookup the matrix data for given ROW.
 //   4. Output data to LS257 Mux.
+//   5. Wait for RTSN to return inactive.
 //   5. Loop
 //
 //   The ps2Interface method is responsible for obtaining a PS/2 Keyboard scancode and
@@ -206,78 +214,190 @@ static portMUX_TYPE             mzMutex  = portMUX_INITIALIZER_UNLOCKED;
 //          are in the first GPIO bank and RTSNi is in the second GPIO bank. Modify the code
 //          if RTSNi is set in the first bank or KDB[3:0], KDI4 are in the second bank.
 //
-IRAM_ATTR void mz25Interface( void * pvParameters )
-{
-    // Locals.
-    volatile uint32_t gpioIN;
-    volatile uint8_t  strobeRow = 1;
-
-    // Mask values declared as variables, let the optimiser decide wether they are constants or placed in-memory.
-    uint32_t          rowBitMask = (1 << CONFIG_MZ_KDB3) | (1 << CONFIG_MZ_KDB2) | (1 << CONFIG_MZ_KDB1) | (1 << CONFIG_MZ_KDB0);
-    uint32_t          colBitMask = (1 << CONFIG_MZ_KDO7) | (1 << CONFIG_MZ_KDO6) | (1 << CONFIG_MZ_KDO5) | (1 << CONFIG_MZ_KDO4) | 
-                                   (1 << CONFIG_MZ_KDO3) | (1 << CONFIG_MZ_KDO2) | (1 << CONFIG_MZ_KDO1) | (1 << CONFIG_MZ_KDO0);
-    uint32_t          KDB3_MASK  = (1 << CONFIG_MZ_KDB3);
-    uint32_t          KDB2_MASK  = (1 << CONFIG_MZ_KDB2);
-    uint32_t          KDB1_MASK  = (1 << CONFIG_MZ_KDB1);
-    uint32_t          KDB0_MASK  = (1 << CONFIG_MZ_KDB0);
-    uint32_t          KDI4_MASK  = (1 << CONFIG_MZ_KDI4);
-    uint32_t          RTSNI_MASK = (1 << (CONFIG_MZ_RTSNI - 32));
-
-    ESP_LOGI(MAINTAG, "Starting mz25Interface thread, colBitMask=%08x, rowBitMask=%08x.", colBitMask, rowBitMask);
-
-    // Create, initialise and hold a spinlock so the current core is bound to this one method.
-    portENTER_CRITICAL(&mzMutex);
-
-    // Permanent loop, just wait for an RTSN strobe, latch the row, lookup matrix and output.
-    // Timings with Power LED = LED Off to On = 108ns, LED On to Off = 392ns
-    for(;;)
+#if defined(CONFIG_MODEL_MZ2500)
+    IRAM_ATTR void mz25Interface( void * pvParameters )
     {
-        #if defined(CONFIG_MZ_WIFI_ENABLED)
-            // Whilst Wifi is active, suspend processing as we need to free up the core.
-            if(wifiActivated)
-            {
-                portEXIT_CRITICAL(&mzMutex);
-                while(wifiActivated);
-            portENTER_CRITICAL(&mzMutex);
-            }
-        #endif
-
-        // Detect RTSN going high, the MZ will send the required row during this cycle.
-        if(REG_READ(GPIO_IN1_REG) & RTSNI_MASK)
+        // Locals.
+        volatile uint32_t gpioIN;
+        volatile uint8_t  strobeRow = 1;
+    
+        // Mask values declared as variables, let the optimiser decide wether they are constants or placed in-memory.
+        uint32_t          rowBitMask = (1 << CONFIG_MZ_KDB3) | (1 << CONFIG_MZ_KDB2) | (1 << CONFIG_MZ_KDB1) | (1 << CONFIG_MZ_KDB0);
+        uint32_t          colBitMask = (1 << CONFIG_MZ_KDO7) | (1 << CONFIG_MZ_KDO6) | (1 << CONFIG_MZ_KDO5) | (1 << CONFIG_MZ_KDO4) | 
+                                       (1 << CONFIG_MZ_KDO3) | (1 << CONFIG_MZ_KDO2) | (1 << CONFIG_MZ_KDO1) | (1 << CONFIG_MZ_KDO0);
+        uint32_t          KDB3_MASK  = (1 << CONFIG_MZ_KDB3);
+        uint32_t          KDB2_MASK  = (1 << CONFIG_MZ_KDB2);
+        uint32_t          KDB1_MASK  = (1 << CONFIG_MZ_KDB1);
+        uint32_t          KDB0_MASK  = (1 << CONFIG_MZ_KDB0);
+        uint32_t          KDI4_MASK  = (1 << CONFIG_MZ_KDI4);
+        uint32_t          RTSNI_MASK = (1 << (CONFIG_MZ_RTSNI - 32));
+    
+        ESP_LOGI(MAINTAG, "Starting mz25Interface thread, colBitMask=%08x, rowBitMask=%08x.", colBitMask, rowBitMask);
+    
+        // Create, initialise and hold a spinlock so the current core is bound to this one method.
+        portENTER_CRITICAL(&mzMutex);
+    
+        // Permanent loop, just wait for an RTSN strobe, latch the row, lookup matrix and output.
+        // Timings with Power LED = LED Off to On = 108ns, LED On to Off = 392ns
+        for(;;)
         {
-            // Read the GPIO ports to get latest Row and KDI4 states.
-            gpioIN = REG_READ(GPIO_IN_REG);
-
-            // Assemble the required matrix row from the configured bits.
-            strobeRow = ((gpioIN&KDB3_MASK) >> (CONFIG_MZ_KDB3-3)) | ((gpioIN&KDB2_MASK) >> (CONFIG_MZ_KDB2-2)) | ((gpioIN&KDB1_MASK) >> (CONFIG_MZ_KDB1-1)) | ((gpioIN&KDB0_MASK) >> CONFIG_MZ_KDB0);
-         
-            // Clear all KDO bits - clear state = '1'
-            GPIO.out_w1ts = colBitMask;                                // Reset all scan data bits to '1', inactive.
-
-            // KDI4 indicates if row data is needed or a single byte ANDing all the keys together, ie. to detect a key press without strobing all rows.
-            if(gpioIN & KDI4_MASK)
+            #if defined(CONFIG_MZ_WIFI_ENABLED)
+                // Whilst Wifi is active, suspend processing as we need to free up the core.
+                if(wifiActivated)
+                {
+                    portEXIT_CRITICAL(&mzMutex);
+                    while(wifiActivated);
+                portENTER_CRITICAL(&mzMutex);
+                }
+            #endif
+    
+            // Detect RTSN going high, the MZ will send the required row during this cycle.
+            if(REG_READ(GPIO_IN1_REG) & RTSNI_MASK)
             {
-                // Set all required KDO bits according to keyMatrix, set state = '0'.
-                GPIO.out_w1tc = mzControl.keyMatrixAsGPIO[strobeRow];  // Set to '0' active bits.
-            } else
-            {
-                // Set all required KDO bits according to the strobe all value. set state = '0'.
-                GPIO.out_w1tc = mzControl.strobeAllAsGPIO;             // Set to '0' active bits.
+                // Read the GPIO ports to get latest Row and KDI4 states.
+                gpioIN = REG_READ(GPIO_IN_REG);
+    
+                // Assemble the required matrix row from the configured bits.
+                strobeRow = ((gpioIN&KDB3_MASK) >> (CONFIG_MZ_KDB3-3)) | ((gpioIN&KDB2_MASK) >> (CONFIG_MZ_KDB2-2)) | ((gpioIN&KDB1_MASK) >> (CONFIG_MZ_KDB1-1)) | ((gpioIN&KDB0_MASK) >> CONFIG_MZ_KDB0);
+             
+                // Clear all KDO bits - clear state = '1'
+                GPIO.out_w1ts = colBitMask;                                // Reset all scan data bits to '1', inactive.
+    
+                // KDI4 indicates if row data is needed or a single byte ANDing all the keys together, ie. to detect a key press without strobing all rows.
+                if(gpioIN & KDI4_MASK)
+                {
+                    // Set all required KDO bits according to keyMatrix, set state = '0'.
+                    GPIO.out_w1tc = mzControl.keyMatrixAsGPIO[strobeRow];  // Set to '0' active bits.
+                } else
+                {
+                    // Set all required KDO bits according to the strobe all value. set state = '0'.
+                    GPIO.out_w1tc = mzControl.strobeAllAsGPIO;             // Set to '0' active bits.
+                }
+    
+                // Wait for RTSN to go low. No lockup guarding as timing is critical also the watchdog is disabled, if RTSN never goes low then the user has probably unplugged the interface!
+                while(REG_READ(GPIO_IN1_REG) & RTSNI_MASK);
             }
-
-            // Wait for RTSN to go low. No lockup guarding as timing is critical also the watchdog is disabled, if RTSN never goes low then the user has probably unplugged the interface!
-            while(REG_READ(GPIO_IN1_REG) & RTSNI_MASK);
+    
+            // Logic to feed the watchdog if needed. Watchdog disabled in menuconfig but if enabled this will need to be used.
+            //TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE; // write enable
+            //TIMERG0.wdt_feed=1;                       // feed dog
+            //TIMERG0.wdt_wprotect=0;                   // write protect
+            //TIMERG1.wdt_wprotect=TIMG_WDT_WKEY_VALUE; // write enable
+            //TIMERG1.wdt_feed=1;                       // feed dog
+            //TIMERG1.wdt_wprotect=0;                   // write protect
         }
-
-        // Logic to feed the watchdog if needed. Watchdog disabled in menuconfig but if enabled this will need to be used.
-        //TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE; // write enable
-        //TIMERG0.wdt_feed=1;                       // feed dog
-        //TIMERG0.wdt_wprotect=0;                   // write protect
-        //TIMERG1.wdt_wprotect=TIMG_WDT_WKEY_VALUE; // write enable
-        //TIMERG1.wdt_feed=1;                       // feed dog
-        //TIMERG1.wdt_wprotect=0;                   // write protect
     }
-}
+#endif
+
+// Method to connect and interact with the MZ-2800 keyboard controller. This method is seperate from the MZ-2500
+// as the scan is different and as it is time critical it needs to be per target machine.
+//
+// The basic requirement is to:
+//   1. Detect a rising edge on the RTSN signal
+//   2. Wait at least 200ns before sampling KD4
+//   3. Wait at least 650ns before reading ROW.
+//   4. Read the provided ROW number.
+//   5. If KD4 = 0 then output logical AND of all columns to LS257 Mux.
+//   6. If KD4 = 1 then lookup data for given row and output to LS257 Mux.
+//   7. Wait for RTSN to return low.
+//   7. Loop
+//
+//   The ps2Interface method is responsible for obtaining a PS/2 Keyboard scancode and
+//   creating the corresponding virtual matrix.
+//
+//   NB: As this method holds Core 1 under spinlock, no FreeRTOS or Arduino access 
+//   can be made except for basic I/O ports. The spinlock has to be released for non
+//   I/O work.
+//
+// The MZ 2800 timing period is 1.78uS RTSN going active high, KD4 changing state 150ns after RTSN goes active,
+// ROW number being set 650ns after RTSN goes active. MPX directly controls the LS257 latch so only need to write out
+// and 8 bit value prior to RTSN going inactive.
+// Normally the keyboard is in STROBE ALL mode. When a key is pressed, it commences a scan and when it arrives at the pressed
+// key, RTSN cycle is suspended for varying amounts of time (ie 500us or 19ms) as the controller is looking for debounce and repeat.
+//
+// WARNING: The GPIO's are configurable via menuconfig BUT it is assumed all except RTSNi
+//          are in the first GPIO bank and RTSNi is in the second GPIO bank. Modify the code
+//          if RTSNi is set in the first bank or KDB[3:0], KDI4 are in the second bank.
+//
+#if defined(CONFIG_MODEL_MZ2800)
+    IRAM_ATTR void mz28Interface( void * pvParameters )
+    {
+        // Locals.
+        volatile uint32_t gpioIN;
+        volatile uint8_t  strobeRow = 1;
+    
+        // Mask values declared as variables, let the optimiser decide wether they are constants or placed in-memory.
+        uint32_t          rowBitMask = (1 << CONFIG_MZ_KDB3) | (1 << CONFIG_MZ_KDB2) | (1 << CONFIG_MZ_KDB1) | (1 << CONFIG_MZ_KDB0);
+        uint32_t          colBitMask = (1 << CONFIG_MZ_KDO7) | (1 << CONFIG_MZ_KDO6) | (1 << CONFIG_MZ_KDO5) | (1 << CONFIG_MZ_KDO4) | 
+                                       (1 << CONFIG_MZ_KDO3) | (1 << CONFIG_MZ_KDO2) | (1 << CONFIG_MZ_KDO1) | (1 << CONFIG_MZ_KDO0);
+        uint32_t          KDB3_MASK  = (1 << CONFIG_MZ_KDB3);
+        uint32_t          KDB2_MASK  = (1 << CONFIG_MZ_KDB2);
+        uint32_t          KDB1_MASK  = (1 << CONFIG_MZ_KDB1);
+        uint32_t          KDB0_MASK  = (1 << CONFIG_MZ_KDB0);
+        uint32_t          KDI4_MASK  = (1 << CONFIG_MZ_KDI4);
+        uint32_t          RTSNI_MASK = (1 << (CONFIG_MZ_RTSNI - 32));
+    
+        ESP_LOGI(MAINTAG, "Starting mz28Interface thread, colBitMask=%08x, rowBitMask=%08x.", colBitMask, rowBitMask);
+    
+        // Create, initialise and hold a spinlock so the current core is bound to this one method.
+        portENTER_CRITICAL(&mzMutex);
+    
+        // Permanent loop, just wait for an RTSN strobe, latch the row, lookup matrix and output.
+        for(;;)
+        {
+            #if defined(CONFIG_MZ_WIFI_ENABLED)
+                // Whilst Wifi is active, suspend processing as we need to free up the core.
+                if(wifiActivated)
+                {
+                    portEXIT_CRITICAL(&mzMutex);
+                    while(wifiActivated);
+                portENTER_CRITICAL(&mzMutex);
+                }
+            #endif
+              
+            // Detect RTSN going high, the MZ will send the required row during this cycle.
+            if(REG_READ(GPIO_IN1_REG) & RTSNI_MASK)
+            {
+                // Slight delay needed as KD4 lags behind RTSN by approx 200ns and ROW number lags 850ns behind RTSN.
+                for(volatile uint32_t delay=0; delay < 8; delay++);
+
+                // Read the GPIO ports to get latest Row and KDI4 states.
+                gpioIN = REG_READ(GPIO_IN_REG);
+    
+                // Assemble the required matrix row from the configured bits.
+                strobeRow = ((gpioIN&KDB3_MASK) >> (CONFIG_MZ_KDB3-3)) | ((gpioIN&KDB2_MASK) >> (CONFIG_MZ_KDB2-2)) | ((gpioIN&KDB1_MASK) >> (CONFIG_MZ_KDB1-1)) | ((gpioIN&KDB0_MASK) >> CONFIG_MZ_KDB0);
+             
+                // Clear all KDO bits - clear state = '1'
+                GPIO.out_w1ts = colBitMask;                                // Reset all scan data bits to '1', inactive.
+
+                // Another short delay once the row has been assembled as we dont want to change the latch setting too soon, changing to soon leads to ghosting on previous row.
+                for(volatile uint32_t delay=0; delay < 5; delay++);
+    
+                // KDI4 indicates if row data is needed or a single byte ANDing all the keys together, ie. to detect a key press without strobing all rows.
+                if(gpioIN & KDI4_MASK)
+                {
+                    // Set all required KDO bits according to keyMatrix, set state = '0'.
+                    GPIO.out_w1tc = mzControl.keyMatrixAsGPIO[strobeRow];  // Set to '0' active bits.
+                } else
+                {
+                    // Set all required KDO bits according to the strobe all value. set state = '0'.
+                    GPIO.out_w1tc = mzControl.strobeAllAsGPIO;             // Set to '0' active bits.
+                }
+    
+                // Wait for RTSN to go low. No lockup guarding as timing is critical also the watchdog is disabled, if RTSN never goes low then the user has probably unplugged the interface!
+                while(REG_READ(GPIO_IN1_REG) & RTSNI_MASK);
+            }
+    
+            // Logic to feed the watchdog if needed. Watchdog disabled in menuconfig but if enabled this will need to be used.
+            //TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE; // write enable
+            //TIMERG0.wdt_feed=1;                       // feed dog
+            //TIMERG0.wdt_wprotect=0;                   // write protect
+            //TIMERG1.wdt_wprotect=TIMG_WDT_WKEY_VALUE; // write enable
+            //TIMERG1.wdt_feed=1;                       // feed dog
+            //TIMERG1.wdt_wprotect=0;                   // write protect
+        }
+    }
+#endif
 
 // Method to refresh the transposed matrix used in the MZ interface. The normal key matrix is transposed to save valuable time
 // because even though a core is dedicated to the MZ interface the timing is critical and the ESP-32 doesnt have spare horse power!
@@ -1095,8 +1215,14 @@ void setup()
     // to interact with the PS/2 keyboard and buffer scan codes.
     //
     // Core 1 - MZ Interface
-    ESP_LOGI(MAINTAG, "Starting mz25if thread...");
-    xTaskCreatePinnedToCore(mz25Interface, "mz25if", 32768, NULL, 25, &TaskMZ25IF, 1);
+    #if defined(CONFIG_MODEL_MZ2500)
+        ESP_LOGI(MAINTAG, "Starting mz25if thread...");
+        xTaskCreatePinnedToCore(mz25Interface, "mz25if", 32768, NULL, 25, &TaskMZ25IF, 1);
+    #endif
+    #if defined(CONFIG_MODEL_MZ2800)
+        ESP_LOGI(MAINTAG, "Starting mz28if thread...");
+        xTaskCreatePinnedToCore(mz28Interface, "mz28if", 32768, NULL, 25, &TaskMZ28IF, 1);
+    #endif
     vTaskDelay(500);
 
     // Core 0 - Application

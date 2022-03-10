@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "mz25key")(type "KiCad")(uri "${KIPRJMOD}/mz25key_v_1_2.kicad_sym")(options "")(descr ""))
+)

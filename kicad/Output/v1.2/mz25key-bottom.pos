@@ -1,0 +1,17 @@
+### Module positions - created on Tuesday, 22 February 2022 at 12:16:19 ###
+### Printed by Pcbnew version (6.0.1-0)
+## Unit = mm, Angle = deg.
+## Side : bottom
+# Ref     Val                 Package                 PosX       PosY       Rot  Side
+C4        100nF               C_0805_2012Metric   -91.6100  -105.0100    0.0000  bottom
+Q1        MMDT3904            SOT-363_SC-70-6     -87.7400  -104.5700    0.0000  bottom
+R8        2K                  R_0805_2012Metric   -96.3200   -97.0800    0.0000  bottom
+R9        2K                  R_0805_2012Metric   -91.6200   -98.8700  180.0000  bottom
+R10       10K                 R_0805_2012Metric   -83.9400  -104.9800    0.0000  bottom
+R11       10K                 R_0805_2012Metric   -91.6200  -100.9500    0.0000  bottom
+R12       100R                R_0805_2012Metric   -90.7400   -87.4300  180.0000  bottom
+R13       100R                R_0805_2012Metric   -90.5000   -93.6000  -90.0000  bottom
+R14       10K                 R_0805_2012Metric   -59.2500   -84.5900  180.0000  bottom
+R15       10K                 R_0805_2012Metric   -91.6200  -103.0200  180.0000  bottom
+U3        ESP32-S_AI_Thinker  ESP32-S             -74.9800   -93.2200  -90.0000  bottom
+## End
