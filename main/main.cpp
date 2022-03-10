@@ -65,9 +65,8 @@
   #include "esp_wifi.h"
   #include "esp_event.h"
   #include "nvs_flash.h"
-#include "lwip/err.h"
-#include "lwip/sys.h"
-
+  #include "lwip/err.h"
+  #include "lwip/sys.h"
 #endif
 #include "Arduino.h"
 #include "driver/gpio.h"
@@ -126,7 +125,12 @@ TaskHandle_t                    TaskPS2IF  = NULL;
 static portMUX_TYPE             mzMutex  = portMUX_INITIALIZER_UNLOCKED;
 
 // Tag for ESP main application logging.
-#define                         MAINTAG  "mz25key"
+#if defined(CONFIG_MODEL_MZ2500)
+  #define                       MAINTAG  "mz25key"
+#endif
+#if defined(CONFIG_MODEL_MZ2800)
+  #define                       MAINTAG  "mz28key"
+#endif
 
 #if defined(CONFIG_MZ_WIFI_ENABLED)
     // The event group allows multiple bits for each event, but we only care about two events:
@@ -185,8 +189,8 @@ static portMUX_TYPE             mzMutex  = portMUX_INITIALIZER_UNLOCKED;
     #define dbgprintf(a, ...) {};
 #endif
 
-// Method to connect and interact with the MZ-5800 keyboard controller. This method is seperate from the MZ-2800
-// as the scan is different and as it is time critical it needs to be per target machine.
+// Method to connect and interact with the MZ-2500 keyboard controller. This method is seperate from the MZ-2800
+// as the scan is different and as it is time critical it is better to be per target machine.
 //
 // The basic requirement is to:
 //   1. Detect a falling edge on the RTSN signal
@@ -370,7 +374,7 @@ static portMUX_TYPE             mzMutex  = portMUX_INITIALIZER_UNLOCKED;
                 // Clear all KDO bits - clear state = '1'
                 GPIO.out_w1ts = colBitMask;                                // Reset all scan data bits to '1', inactive.
 
-                // Another short delay once the row has been assembled as we dont want to change the latch setting too soon, changing to soon leads to ghosting on previous row.
+                // Another short delay once the row has been assembled as we dont want to change the latch setting too soon, changing too soon leads to ghosting on previous row.
                 for(volatile uint32_t delay=0; delay < 5; delay++);
     
                 // KDI4 indicates if row data is needed or a single byte ANDing all the keys together, ie. to detect a key press without strobing all rows.
@@ -1211,8 +1215,8 @@ void setup()
 
     // Create a task pinned to core 0 which will fulfill the MZ-2500/2800 interface. This task has the highest priority
     // and it will also hold spinlock and manipulate the watchdog to ensure a scan cycle timing can be met. This means 
-    // all other tasks running on Core 1 will suspend. The PS/2 controller, running on the ULP processor will continue
-    // to interact with the PS/2 keyboard and buffer scan codes.
+    // all other tasks running on Core 1 will suspend. The PS/2 controller which runs on core 0 will continue to interact
+    // with the PS/2 keyboard and buffer scan codes.
     //
     // Core 1 - MZ Interface
     #if defined(CONFIG_MODEL_MZ2500)
@@ -1231,7 +1235,7 @@ void setup()
     xTaskCreatePinnedToCore(ps2Interface, "ps2if",   32768, NULL, 22, &TaskPS2IF, 0);
     vTaskDelay(500);
 
-    // Core 9 - WiFi handler thread.
+    // Core 0 - WiFi handler thread.
     #if defined(CONFIG_MZ_WIFI_ENABLED)
         ESP_LOGI(MAINTAG, "Starting wifi thread...");
         xTaskCreatePinnedToCore(wifiInterface, "wifi", 32768, NULL, 1, &TaskWIFI,  0);
