@@ -6,3 +6,6 @@ cmake_minimum_required(VERSION 3.5)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(main)
+
+# Create the default filesystem with files loaded from the webserver directory.
+littlefs_create_partition_image(filesys webfs)
