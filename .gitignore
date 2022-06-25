@@ -50,3 +50,4 @@ sdkconfigq
 components.x/
 components/
 main/main.cpp.bak2
+webfs/
