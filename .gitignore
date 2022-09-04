@@ -51,3 +51,6 @@ components.x/
 components/
 main/main.cpp.bak2
 webfs/
+webserver/font-awesome/fonts/fontawesome-webfont.ttf.orig
+webserver/font-awesome/fonts/fontawesome-webfont.woff.orig
+

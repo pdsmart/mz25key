@@ -12,4 +12,5 @@ hosts.
 
 Please see my website, https://eaw.app for more documentation and recent updates. 
 
-The firmware is undergoing rapid advances and will initially only be included as releases.
+The source code for the mz25key is identical to the SharpKey, just the build time configuration via the KConfig menu. The provided sdkconfig
+is setup so that the source code will build the mz25key.
